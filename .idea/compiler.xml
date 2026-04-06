@@ -7,13 +7,7 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.30/f195ee86e6c896ea47a1d39defbe20eb59cd149d/lombok-1.18.30.jar" />
         </processorPath>
-        <module name="ecom-order-system.api-gateway.main" />
-        <module name="ecom-order-system.product-service.main" />
-        <module name="ecom-order-system.order-service.main" />
         <module name="ecom-order-system.user-service.main" />
-        <module name="ecom-order-system.cart-service.main" />
-        <module name="ecom-order-system.user-service.test" />
-        <module name="ecom-order-system.notification-service.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17">
@@ -22,21 +16,6 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="ecom-order-system.api-gateway" options="-parameters" />
-      <module name="ecom-order-system.api-gateway.main" options="-parameters" />
-      <module name="ecom-order-system.api-gateway.test" options="-parameters" />
-      <module name="ecom-order-system.cart-service" options="-parameters" />
-      <module name="ecom-order-system.cart-service.main" options="-parameters" />
-      <module name="ecom-order-system.cart-service.test" options="-parameters" />
-      <module name="ecom-order-system.notification-service" options="-parameters" />
-      <module name="ecom-order-system.notification-service.main" options="-parameters" />
-      <module name="ecom-order-system.notification-service.test" options="-parameters" />
-      <module name="ecom-order-system.order-service" options="-parameters" />
-      <module name="ecom-order-system.order-service.main" options="-parameters" />
-      <module name="ecom-order-system.order-service.test" options="-parameters" />
-      <module name="ecom-order-system.product-service" options="-parameters" />
-      <module name="ecom-order-system.product-service.main" options="-parameters" />
-      <module name="ecom-order-system.product-service.test" options="-parameters" />
       <module name="ecom-order-system.user-service" options="-parameters" />
       <module name="ecom-order-system.user-service.main" options="-parameters" />
       <module name="ecom-order-system.user-service.test" options="-parameters" />
