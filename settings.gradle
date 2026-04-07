@@ -1,10 +1,10 @@
 rootProject.name = 'ecom-order-system'
 
         include(
-        'api-gateway',
+       // 'api-gateway',
         'user-service',
         'product-service',
-        'order-service',
-        'cart-service',
-        'notification-service'
+        //'order-service',
+       // 'cart-service',
+       // 'notification-service'
         )
