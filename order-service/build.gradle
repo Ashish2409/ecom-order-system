@@ -1,0 +1,18 @@
+plugins {
+    id 'org.springframework.boot'
+}
+tasks.withType(JavaExec) {
+    systemProperty "user.timezone", "Asia/Kolkata"
+}
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // WebClient for calling Product Service
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // Kafka producer
+    implementation 'org.springframework.kafka:spring-kafka'
+    runtimeOnly     'org.postgresql:postgresql'
+    testImplementation 'com.h2database:h2'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+}
