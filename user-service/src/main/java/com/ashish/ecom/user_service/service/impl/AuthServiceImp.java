@@ -9,7 +9,6 @@ import com.ashish.ecom.user_service.model.User;
 import com.ashish.ecom.user_service.repository.UserRepository;
 import com.ashish.ecom.user_service.security.JwtUtil;
 import com.ashish.ecom.user_service.service.AuthService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,15 +23,26 @@ public class AuthServiceImp implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private static String sanitizeForLog(String value) {
+        if (value == null) return "";
+        return value.replace('\r', '_').replace('\n', '_');
+    }
+
+    private static String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return "***";
+        String[] parts = email.split("@");
+        return parts[0].substring(0, Math.min(2, parts[0].length())) + "***@" + parts[1];
+    }
 
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        log.info("Register attempt for email: {}", request.getEmail());
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("Email already registered: " + request.getEmail());
         }
+        String safeEmail = sanitizeForLog(request.getEmail());
+        log.info("Registering new user with email: {}", maskEmail(safeEmail));
 
         User user = User.builder()
                 .name(request.getName())
