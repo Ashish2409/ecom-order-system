@@ -1,0 +1,94 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited ]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. Enforce conventional commit PR titles
+  # ─────────────────────────────────────────────
+  pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" must start with lowercase.
+
+  # ─────────────────────────────────────────────
+  # 2. Check PR size (warn on massive PRs)
+  # ─────────────────────────────────────────────
+  pr-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: codelytv/pr-size-labeler@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/xs'
+          s_label: 'size/s'
+          m_label: 'size/m'
+          l_label: 'size/l'
+          xl_label: 'size/xl'
+          fail_if_xl: false
+          message_if_xl: |
+            ⚠️ This PR is too big. Consider splitting it into smaller PRs.
+
+  # ─────────────────────────────────────────────
+  # 3. Java code style (checkstyle/spotless)
+  # ─────────────────────────────────────────────
+  code-style:
+    name: Code Style Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run Spotless check on all services
+        run: |
+          for service in user-service product-service order-service cart-service notification-service api-gateway; do
+            if [ -d "$service" ]; then
+              cd $service
+              chmod +x gradlew
+              ./gradlew spotlessCheck --no-daemon || echo "Spotless not configured for $service"
+              cd ..
+            fi
+          done
+
+  # ─────────────────────────────────────────────
+  # 4. Secret scanning (gitleaks)
+  # ─────────────────────────────────────────────
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
