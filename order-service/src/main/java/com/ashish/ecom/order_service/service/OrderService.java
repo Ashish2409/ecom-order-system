@@ -4,9 +4,11 @@ package com.ashish.ecom.order_service.service;
 import com.ashish.ecom.order_service.kafka.KafkaProducerConfig;
 import com.ashish.ecom.order_service.kafka.OrderEvent;
 import com.ashish.ecom.order_service.model.*;
+import com.ashish.ecom.order_service.dto.ProductResponse;
 import com.ashish.ecom.order_service.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -18,13 +20,19 @@ import java.util.List;
 import com.ashish.ecom.order_service.config.WebClientConfig;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class OrderService {
 
     private final OrderRepository   orderRepository;
     private final KafkaTemplate<String, OrderEvent> kafkaTemplate;
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient productWebClient;
+    public OrderService(OrderRepository orderRepository,
+                        KafkaTemplate<String, OrderEvent> kafkaTemplate,
+                        @Qualifier("productWebClient") WebClient productWebClient) {
+        this.orderRepository = orderRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.productWebClient = productWebClient;
+    }
 
     @Value("${services.product-url}")
     private String productUrl;
@@ -34,32 +42,57 @@ public class OrderService {
     @Transactional
     public Order placeOrder(Long userId, Long productId, int quantity) {
 
-        // 1. Check & reduce stock in Product Service (sync REST call)
-        Boolean ok = webClientBuilder.build()
+        // 1. Fetch product details
+        ProductResponse product;
+        try {
+            product = productWebClient
+                    .get()
+                    .uri(productUrl + "/api/products/" + productId)
+                    .retrieve()
+                    .bodyToMono(ProductResponse.class)
+                    .block();
+        } catch (Exception e) {
+            throw new RuntimeException("Product Service unavailable or product not found");
+        }
+
+        if (product == null || !Boolean.TRUE.equals(product.getActive())) {
+            throw new RuntimeException("Invalid or inactive product");
+        }
+
+        // 2. Check stock
+        if (product.getStock() < quantity) {
+            throw new RuntimeException("Insufficient stock");
+        }
+
+        // 3. Reduce stock (separate call)
+        Boolean stockUpdated = productWebClient
                 .put()
-                .uri(productUrl + "/api/products/" + productId
-                        + "/stock?quantity=" + quantity)
+                .uri(productUrl + "/api/products/" + productId + "/stock?quantity=" + quantity)
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
 
-        if (!Boolean.TRUE.equals(ok))
-            throw new RuntimeException(
-                    "Insufficient stock for product: " + productId);
+        if (!Boolean.TRUE.equals(stockUpdated)) {
+            throw new RuntimeException("Failed to update stock");
+        }
 
-        // 2. Save order
+        // 4. Calculate totalAmount using REAL price
+        double totalAmount = product.getPrice() * quantity;
+
+        // 5. Save order
         Order order = Order.builder()
                 .userId(userId)
                 .productId(productId)
                 .quantity(quantity)
-                .totalAmount(quantity * 999.0)   // simplified — fetch real price
+                .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
                 .build();
+
         Order saved = orderRepository.save(order);
 
-        // 3. Publish Kafka event (async)
+        // 6. Publish Kafka event
         publishEvent(saved);
-        log.info("Order #{} placed for user {}", saved.getId(), userId);
+
         return saved;
     }
     public List<Order> getUserOrders(Long userId) {

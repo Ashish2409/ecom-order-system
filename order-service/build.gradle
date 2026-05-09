@@ -15,4 +15,5 @@ dependencies {
     runtimeOnly     'org.postgresql:postgresql'
     testImplementation 'com.h2database:h2'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 }

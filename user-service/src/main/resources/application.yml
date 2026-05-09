@@ -6,9 +6,9 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ecomdb
-    username: ashish
-    password: password123
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ecomdb}
+    username: ${DB_USER:ashish}
+    password: ${DB_PASSWORD:password123}
 
   jpa:
     hibernate:
@@ -18,5 +18,5 @@ spring:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: MySecretKeyForJWTSigningMustBe256BitsLong!!
-  expiration: 86400000
+  secret: ${JWT_SECRET:defaultDevSecretMustBeAtLeast32CharactersLongForHS256!}
+  expiration: ${JWT_EXPIRATION:86400000}
