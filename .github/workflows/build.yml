@@ -65,15 +65,15 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-product-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-product-service:${{ github.sha }}
 
-      - name: Deploy to AWS EC2
-        if: success()
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/ecom-order-system
-            docker-compose pull
-            docker-compose up -d
-            docker system prune -f
+#      - name: Deploy to AWS EC2
+#        if: success()
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ secrets.EC2_HOST }}
+#          username: ubuntu
+#          key: ${{ secrets.EC2_SSH_KEY }}
+#          script: |
+#            cd ~/ecom-order-system
+#            docker-compose pull
+#            docker-compose up -d
+#            docker system prune -f
