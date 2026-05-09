@@ -26,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.filter.outputs.changes }}
-      any-service-changed: ${{ steps.filter.outputs.any-service-changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,16 +46,6 @@ jobs:
               - 'notification-service/**'
             api-gateway:
               - 'api-gateway/**'
-            any-service-changed:
-              - 'user-service/**'
-              - 'product-service/**'
-              - 'order-service/**'
-              - 'cart-service/**'
-              - 'notification-service/**'
-              - 'api-gateway/**'
-              - 'build.gradle'
-              - 'settings.gradle'
-              - 'gradle/**'
 
   # ─────────────────────────────────────────────
   # Build changed services (uses ROOT gradlew)
