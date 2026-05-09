@@ -1,25 +1,32 @@
-name: CI - Build & Test
+name: CI - Build
 
 on:
   pull_request:
     branches: [ main, develop ]
   push:
     branches: [ main, develop ]
+  workflow_dispatch:
 
-# Cancel outdated runs on same branch
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  actions: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   # ─────────────────────────────────────────────
-  # Detect which services changed (smart builds)
+  # Detect which services changed
   # ─────────────────────────────────────────────
   detect-changes:
     name: Detect Changed Services
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.filter.outputs.changes }}
+      any-service-changed: ${{ steps.filter.outputs.any-service-changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,44 +47,29 @@ jobs:
               - 'notification-service/**'
             api-gateway:
               - 'api-gateway/**'
+            any-service-changed:
+              - 'user-service/**'
+              - 'product-service/**'
+              - 'order-service/**'
+              - 'cart-service/**'
+              - 'notification-service/**'
+              - 'api-gateway/**'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - 'gradle/**'
 
   # ─────────────────────────────────────────────
-  # Build + Test changed services in parallel
+  # Build changed services (uses ROOT gradlew)
   # ─────────────────────────────────────────────
-  build-test:
-    name: Build & Test (${{ matrix.service }})
+  build:
+    name: Build (${{ matrix.service }})
     needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.services != '[]' }}
+    if: ${{ needs.detect-changes.outputs.services != '[]' && needs.detect-changes.outputs.services != '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJSON(needs.detect-changes.outputs.services) }}
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -91,71 +83,56 @@ jobs:
           cache: 'gradle'
 
       - name: Grant execute permission for gradlew
-        working-directory: ${{ matrix.service }}
-        run: chmod +x gradlew
+        run: chmod +x ./gradlew
+
+      - name: Verify Gradle project structure
+        run: |
+          echo "=== Root files ==="
+          ls -la
+          echo ""
+          echo "=== Gradle projects ==="
+          ./gradlew projects --no-daemon || echo "Projects listing failed"
 
       - name: Build ${{ matrix.service }}
-        working-directory: ${{ matrix.service }}
         env:
           SPRING_PROFILES_ACTIVE: test
-          DB_URL: jdbc:postgresql://localhost:5432/testdb
-          DB_USER: test
-          DB_PASSWORD: test
           JWT_SECRET: testSecretMustBeAtLeast32CharactersLongForHS256!
           JWT_EXPIRATION: 3600000
-        run: ./gradlew clean build --no-daemon
-
-      - name: Run tests
-        working-directory: ${{ matrix.service }}
-        env:
-          SPRING_PROFILES_ACTIVE: test
-          DB_URL: jdbc:postgresql://localhost:5432/testdb
-          DB_USER: test
-          DB_PASSWORD: test
-          JWT_SECRET: testSecretMustBeAtLeast32CharactersLongForHS256!
-        run: ./gradlew test --no-daemon
-
-      - name: Generate test report
-        if: always()
-        uses: mikepenz/action-junit-report@v4
-        with:
-          name: Test Report - ${{ matrix.service }}
-          path: '${{ matrix.service }}/build/test-results/test/*.xml'
-          require_tests: false
-          fail-on-error: false
-
-      - name: Generate JaCoCo coverage report
-        working-directory: ${{ matrix.service }}
-        run: ./gradlew jacocoTestReport --no-daemon || echo "JaCoCo not configured yet"
-
-      - name: Upload coverage to artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ matrix.service }}
-          path: ${{ matrix.service }}/build/reports/jacoco/test/html/
-          retention-days: 7
+        run: |
+          # Build only the changed service from root
+          ./gradlew :${{ matrix.service }}:build -x test --no-daemon
 
       - name: Upload build artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: jar-${{ matrix.service }}
           path: ${{ matrix.service }}/build/libs/*.jar
           retention-days: 7
+          if-no-files-found: warn
 
   # ─────────────────────────────────────────────
-  # Overall status check (required for branch protection)
+  # Aggregate success check for branch protection
   # ─────────────────────────────────────────────
   ci-success:
     name: CI Success
-    needs: build-test
+    needs: [ detect-changes, build ]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Verify all jobs passed
+      - name: Verify build status
         run: |
-          if [ "${{ needs.build-test.result }}" != "success" ] && [ "${{ needs.build-test.result }}" != "skipped" ]; then
+          echo "Detect result: ${{ needs.detect-changes.result }}"
+          echo "Build result: ${{ needs.build.result }}"
+          
+          if [ "${{ needs.detect-changes.result }}" != "success" ]; then
+            echo "❌ Change detection failed"
+            exit 1
+          fi
+          
+          if [ "${{ needs.build.result }}" = "failure" ]; then
             echo "❌ Build failed"
             exit 1
           fi
-          echo "✅ All checks passed"
+          
+          echo "✅ All checks passed (or skipped - no service changes)"

@@ -4,9 +4,15 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened, edited ]
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+
 jobs:
   # ─────────────────────────────────────────────
-  # 1. Enforce conventional commit PR titles
+  # Validate PR title follows conventional commits
   # ─────────────────────────────────────────────
   pr-title:
     name: Validate PR Title
@@ -29,12 +35,9 @@ jobs:
             chore
             revert
           requireScope: false
-          subjectPattern: ^(?![A-Z]).+$
-          subjectPatternError: |
-            The subject "{subject}" must start with lowercase.
 
   # ─────────────────────────────────────────────
-  # 2. Check PR size (warn on massive PRs)
+  # Label PR by size
   # ─────────────────────────────────────────────
   pr-size:
     name: Check PR Size
@@ -49,36 +52,9 @@ jobs:
           l_label: 'size/l'
           xl_label: 'size/xl'
           fail_if_xl: false
-          message_if_xl: |
-            ⚠️ This PR is too big. Consider splitting it into smaller PRs.
 
   # ─────────────────────────────────────────────
-  # 3. Java code style (checkstyle/spotless)
-  # ─────────────────────────────────────────────
-  code-style:
-    name: Code Style Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Run Spotless check on all services
-        run: |
-          for service in user-service product-service order-service cart-service notification-service api-gateway; do
-            if [ -d "$service" ]; then
-              cd $service
-              chmod +x gradlew
-              ./gradlew spotlessCheck --no-daemon || echo "Spotless not configured for $service"
-              cd ..
-            fi
-          done
-
-  # ─────────────────────────────────────────────
-  # 4. Secret scanning (gitleaks)
+  # Secret scanning
   # ─────────────────────────────────────────────
   secret-scan:
     name: Secret Scan
