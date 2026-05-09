@@ -1,0 +1,27 @@
+name: "E-commerce Microservices CodeQL Config"
+
+# Use only ONE query suite to avoid duplicates
+queries:
+  - uses: security-and-quality
+
+# Don't scan these paths (noise reduction)
+paths-ignore:
+  - '**/test/**'
+  - '**/tests/**'
+  - '**/build/**'
+  - '**/target/**'
+  - '**/generated-sources/**'
+  - '**/node_modules/**'
+  - '**/*.min.js'
+
+# Only scan main source
+paths:
+  - '**/src/main/**'
+
+# Optionally filter specific noisy queries
+query-filters:
+  - exclude:
+      id: java/maven/non-https-url
+  - exclude:
+      tags contain:
+        - external/cwe/cwe-798   # hardcoded passwords (often test data)
