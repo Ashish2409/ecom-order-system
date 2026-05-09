@@ -117,11 +117,11 @@ jobs:
 
       - name: Generate test report
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: mikepenz/action-junit-report@v4
         with:
           name: Test Report - ${{ matrix.service }}
-          path: ${{ matrix.service }}/build/test-results/test/*.xml
-          reporter: java-junit
+          path: '${{ matrix.service }}/build/test-results/test/*.xml'
+          require_tests: false
           fail-on-error: false
 
       - name: Generate JaCoCo coverage report
