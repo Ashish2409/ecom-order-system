@@ -1,13 +1,58 @@
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
 
 spring:
+  application:
+    name: product-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/ecomdb
-    username: ashish
-    password: password123
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ecomdb}
+    username: ${DB_USER:ashish}
+    password: ${DB_PASSWORD:password123}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL:update}
+    show-sql: ${SQL_LOG:false}
     properties:
-      hibernate.default_schema: products
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: products
+        jdbc.time_zone: UTC
+        format_sql: true
+    open-in-view: false
+
+  jackson:
+    time-zone: UTC
+
+# ⭐ SAME KEYS as user-service
+jwt:
+  secret: ${JWT_SECRET:defaultDevSecretMustBeAtLeast32CharactersLongForHS256!}
+  # Note: product-service doesn't USE expiration (it doesn't issue tokens)
+  # but keep it for config parity
+  expiration: ${JWT_EXPIRATION:86400000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.ashish.ecom.product_service: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SEC_LOG_LEVEL:INFO}

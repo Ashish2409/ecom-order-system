@@ -1,20 +1,37 @@
 plugins {
     id 'org.springframework.boot'
 }
+
 tasks.withType(JavaExec) {
     systemProperty "user.timezone", "Asia/Kolkata"
 }
 
 dependencies {
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'   // ⭐ NEW
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'   // ⭐ NEW
 
-    runtimeOnly 'org.postgresql:postgresql'
+    // JWT (for validating user-service tokens)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'                         // ⭐ NEW
+    runtimeOnly    'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly    'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.h2database:h2'
+    // OpenAPI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-}
-tasks.named('test') {
-	useJUnitPlatform()
+
+    // DB
+    runtimeOnly 'org.postgresql:postgresql'
+    testImplementation 'com.h2database:h2'
+
+    // Testing
+    testImplementation 'org.springframework.security:spring-security-test'
 }

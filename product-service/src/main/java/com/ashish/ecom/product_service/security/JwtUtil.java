@@ -1,11 +1,6 @@
-package com.ashish.ecom.user_service.security;
+package com.ashish.ecom.product_service.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import java.util.Date;
-import com.ashish.ecom.user_service.exception.InvalidTokenException;
+import com.ashish.ecom.product_service.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -18,18 +13,18 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.Map;
 
+/**
+ * Validates JWTs issued by user-service.
+ * MUST use the same jwt.secret as user-service.
+ * Does NOT generate tokens — product-service only consumes.
+ */
 @Component
 @Slf4j
 public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secret;
-
-    @Value("${jwt.expiration}")
-    private long expirationMs;
 
     private SecretKey key;
 
@@ -39,17 +34,7 @@ public class JwtUtil {
             throw new IllegalStateException("JWT secret must be at least 256 bits (32 chars)");
         }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public String generateToken(String email, String role, Long userId) {
-        Date now = new Date();
-        return Jwts.builder()
-                .subject(email)
-                .claims(Map.of("userId", userId, "role", role))
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + expirationMs))
-                .signWith(key)
-                .compact();
+        log.info("Product-service JWT validator initialized");
     }
 
     public Claims parseToken(String token) {
@@ -75,6 +60,7 @@ public class JwtUtil {
     }
 
     public Long extractUserId(String token) {
+        // ⭐ Safe Number → Long conversion (handles Integer/Long both)
         Number userId = parseToken(token).get("userId", Number.class);
         return userId != null ? userId.longValue() : null;
     }

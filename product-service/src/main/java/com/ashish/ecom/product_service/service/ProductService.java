@@ -1,49 +1,27 @@
 package com.ashish.ecom.product_service.service;
 
-import com.ashish.ecom.product_service.model.Product;
-import com.ashish.ecom.product_service.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
+import com.ashish.ecom.product_service.dto.*;
+import org.springframework.data.domain.Pageable;
 
-@Service
-@RequiredArgsConstructor
-public class ProductService {
+import java.math.BigDecimal;
 
-    private final ProductRepository productRepository;
+public interface ProductService {
 
-    public Product create(Product product) {
-        return productRepository.save(product);
-    }
+    ProductResponse create(CreateProductRequest request, String createdBy);
 
-    public List<Product> getAll() {
-        return productRepository.findByActiveTrue();
-    }
+    ProductResponse getById(Long id);
 
-    public List<Product> search(String name) {
-        return productRepository
-                .findByNameContainingIgnoreCaseAndActiveTrue(name);
-    }
+    PagedResponse<ProductResponse> getAll(Pageable pageable);
 
-    public Product getById(Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found: " + id));
-    }
+    PagedResponse<ProductResponse> search(String name, String category,
+                                          BigDecimal minPrice, BigDecimal maxPrice,
+                                          Pageable pageable);
 
-    @Transactional
-    public boolean checkAndReduceStock(Long productId, int quantity) {
-        Product p = getById(productId);
-        if (p.getStock() < quantity) return false;
-        p.setStock(p.getStock() - quantity);
-        productRepository.save(p);
-        return true;
-    }
+    ProductResponse update(Long id, UpdateProductRequest request, String updatedBy);
 
-    @Transactional
-    public void restoreStock(Long productId, int quantity) {
-        Product p = getById(productId);
-        p.setStock(p.getStock() + quantity);
-        productRepository.save(p);
-    }
+    void softDelete(Long id, String deletedBy);
+
+    boolean checkAndReduceStock(Long productId, int quantity);
+
+    void restoreStock(Long productId, int quantity);
 }
