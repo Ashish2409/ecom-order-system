@@ -1,16 +1,20 @@
 package com.ashish.ecom.order_service.kafka;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-// This POJO is serialised to JSON and sent to Kafka topic "order-events"
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderEvent {
-    private Long   orderId;
-    private Long   userId;
-    private Long   productId;
+    private Long orderId;
+    private Long userId;
+    private Long productId;
     private Integer quantity;
-    private Double  totalAmount;
-    private String  status;          // matches OrderStatus enum name
+    private BigDecimal totalAmount;     // ⭐ BigDecimal, not Double
+    private String status;
     private LocalDateTime timestamp;
 }

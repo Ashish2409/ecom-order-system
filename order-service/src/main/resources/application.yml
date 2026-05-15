@@ -1,25 +1,67 @@
 server:
-  port: 8083
+  port: ${SERVER_PORT:8083}
 
 spring:
+  application:
+    name: order-service
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/ecomdb
-    username: ashish
-    password: password123
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ecomdb}
+    username: ${DB_USER:ashish}
+    password: ${DB_PASSWORD:password123}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL:update}
+    show-sql: ${SQL_LOG:false}
     properties:
-      hibernate.default_schema: orders
-      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: orders
+        jdbc.time_zone: UTC
+    open-in-view: false
+
+  jackson:
+    time-zone: UTC
+
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all                       # ⭐ wait for all replicas
+      retries: 3                      # ⭐ auto-retry transient failures
       properties:
         spring.json.add.type.headers: false
+        enable.idempotence: true      # ⭐ exactly-once semantics
 
+# ⭐ MUST match user-service & product-service
+jwt:
+  secret: ${JWT_SECRET:defaultDevSecretMustBeAtLeast32CharactersLongForHS256!}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 services:
-  product-url: http://localhost:8082
+  product-url: ${PRODUCT_SERVICE_URL:http://localhost:8082}
+  product:
+    connect-timeout-ms: 3000
+    read-timeout-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.ashish.ecom.order_service: ${LOG_LEVEL:INFO}
