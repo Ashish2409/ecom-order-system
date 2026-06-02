@@ -1,0 +1,58 @@
+server:
+  port: ${SERVER_PORT:8084}
+
+spring:
+  application:
+    name: notification-service
+  
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ecomdb?TimeZone=UTC}
+    username: ${DB_USER:ashish}
+    password: ${DB_PASSWORD:password123}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL:update}
+    show-sql: ${SQL_LOG:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: notifications
+        jdbc.time_zone: UTC
+    open-in-view: false
+  
+  jackson:
+    time-zone: UTC
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.ashish.ecom.*
+        spring.json.type.mapping: orderEvent:com.ashish.ecom.notification_service.kafka.OrderEventDTO
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.ashish.ecom.notification_service: ${LOG_LEVEL:INFO}
+    org.springframework.kafka: INFO
