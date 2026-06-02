@@ -39,5 +39,20 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  # Uncomment to run notification-service via Docker
+  # notification-service:
+  #   build: ./notification-service
+  #   container_name: notification-service
+  #   depends_on:
+  #     - postgres
+  #     - kafka
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     DB_URL: jdbc:postgresql://postgres:5432/ecomdb
+  #     DB_USER: ashish
+  #     DB_PASSWORD: password123
+  #     KAFKA_SERVERS: kafka:9092
+
 volumes:
   postgres_data:

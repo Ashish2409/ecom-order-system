@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class OrderEvent {
     private Long orderId;
     private Long userId;
+    private String userEmail;           // ⭐ Added for notifications
     private Long productId;
     private Integer quantity;
     private BigDecimal totalAmount;     // ⭐ BigDecimal, not Double
