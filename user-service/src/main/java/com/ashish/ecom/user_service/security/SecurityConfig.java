@@ -20,7 +20,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // 👈 enables @PreAuthorize
+@EnableMethodSecurity  // enables @PreAuthorize
 @RequiredArgsConstructor
 public class SecurityConfig {
 

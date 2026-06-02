@@ -208,13 +208,14 @@ public class OrderServiceImpl implements OrderService {
             OrderEvent event = OrderEvent.builder()
                     .orderId(o.getId())
                     .userId(o.getUserId())
+                    .userEmail(o.getUserEmail())         // ⭐ Added for notifications
                     .productId(o.getProductId())
                     .quantity(o.getQuantity())
                     .totalAmount(o.getTotalAmount())
                     .status(o.getStatus().name())
                     .timestamp(LocalDateTime.now())
                     .build();
-
+    
             kafkaTemplate.send(TOPIC, String.valueOf(o.getId()), event)
                     .whenComplete((res, ex) -> {
                         if (ex != null) {
