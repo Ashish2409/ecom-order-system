@@ -310,9 +310,20 @@ ecom-order-system/
 docker-compose build
 ```
 
+### Build Without Cache (After Git Merge)
+```bash
+# If you get "not found" errors after merging branches
+docker-compose build --no-cache
+```
+
 ### Run All Services
 ```bash
 docker-compose up -d
+```
+
+### Build and Run
+```bash
+docker-compose up --build -d
 ```
 
 ### View Logs

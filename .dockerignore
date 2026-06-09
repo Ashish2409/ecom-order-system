@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.idea
+.vscode
+.codemie
+*.iml
+*.iws
+*.ipr
+
+# Build artifacts (but keep source code)
+**/build/
+**/target/
+**/.gradle/
+!gradle/wrapper/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in image)
+*.md
+!README.md
+
+# Scripts (not needed in image)
+*.ps1
+*.sh
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
