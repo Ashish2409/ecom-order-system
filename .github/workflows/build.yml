@@ -41,7 +41,8 @@ jobs:
       - name: Build & push order-service
         uses: docker/build-push-action@v5
         with:
-          context: ./order-service
+          context: .
+          dockerfile: order-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-order-service:latest
@@ -50,7 +51,8 @@ jobs:
       - name: Build & push user-service
         uses: docker/build-push-action@v5
         with:
-          context: ./user-service
+          context: .
+          dockerfile: user-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-user-service:latest
@@ -59,11 +61,32 @@ jobs:
       - name: Build & push product-service
         uses: docker/build-push-action@v5
         with:
-          context: ./product-service
+          context: .
+          dockerfile: product-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-product-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-product-service:${{ github.sha }}
+
+      - name: Build & push notification-service
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          dockerfile: notification-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/ecom-notification-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/ecom-notification-service:${{ github.sha }}
+
+      - name: Build & push api-gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          dockerfile: api-gateway/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/ecom-api-gateway:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/ecom-api-gateway:${{ github.sha }}
 
 #      - name: Deploy to AWS EC2
 #        if: success()
