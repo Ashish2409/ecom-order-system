@@ -40,6 +40,7 @@ jobs:
 
       - name: Build & push order-service
         uses: docker/build-push-action@v5
+        timeout-minutes: 15
         with:
           context: .
           file: ./order-service/Dockerfile
@@ -50,6 +51,7 @@ jobs:
 
       - name: Build & push user-service
         uses: docker/build-push-action@v5
+        timeout-minutes: 15
         with:
           context: .
           file: ./user-service/Dockerfile
@@ -60,6 +62,7 @@ jobs:
 
       - name: Build & push product-service
         uses: docker/build-push-action@v5
+        timeout-minutes: 15
         with:
           context: .
           file: ./product-service/Dockerfile
@@ -70,6 +73,7 @@ jobs:
 
       - name: Build & push notification-service
         uses: docker/build-push-action@v5
+        timeout-minutes: 15
         with:
           context: .
           file: ./notification-service/Dockerfile
@@ -80,6 +84,7 @@ jobs:
 
       - name: Build & push api-gateway
         uses: docker/build-push-action@v5
+        timeout-minutes: 15
         with:
           context: .
           file: ./api-gateway/Dockerfile
