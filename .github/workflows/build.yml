@@ -42,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: order-service/Dockerfile
+          file: ./order-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-order-service:latest
@@ -52,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: user-service/Dockerfile
+          file: ./user-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-user-service:latest
@@ -62,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: product-service/Dockerfile
+          file: ./product-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-product-service:latest
@@ -72,7 +72,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: notification-service/Dockerfile
+          file: ./notification-service/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-notification-service:latest
@@ -82,7 +82,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: api-gateway/Dockerfile
+          file: ./api-gateway/Dockerfile
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/ecom-api-gateway:latest
