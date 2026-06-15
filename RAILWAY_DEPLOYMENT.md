@@ -6,86 +6,85 @@ Complete step-by-step guide to deploy your E-Commerce Order System on Railway.ap
 
 1. GitHub account
 2. Railway.app account (sign up at https://railway.app)
-3. CloudKarafka account for Kafka (sign up at https://www.cloudkarafka.com) - FREE Forever
+3. That's it! (Kafka will run on Railway)
 
 ---
 
-## 🎯 PART 1: Setup Kafka (3 FREE Options)
+## 🎯 PART 1: Setup Kafka on Railway (Self-Hosted)
 
-### ⭐ RECOMMENDED: Option 1 - CloudKarafka (Free Tier)
+### ⭐ RECOMMENDED: Deploy Kafka on Railway
 
-**Best for production, most reliable**
+**Why Self-Host on Railway?**
+- ✅ **Truly FREE** - Uses your existing Railway $5 credit (~$1.50/month)
+- ✅ **No external dependencies** - Everything in one platform
+- ✅ **Simple setup** - Just add a Docker service
+- ✅ **Internal networking** - Fast service-to-service communication
+- ✅ **Auto-creates topics** - No manual topic creation needed
+- ✅ **No credit card** for external services
 
-#### Step 1: Create CloudKarafka Account
+### Step 1: Add Kafka Service to Railway
+
 ```bash
-1. Go to https://www.cloudkarafka.com
-2. Click "Sign Up" (Free)
-3. Choose "Developer Duck" plan (FREE)
-4. Select region (closest to you)
-5. Name: ecom-kafka
-6. Create instance
+1. Go to your Railway Project Dashboard
+2. Click "New" → "Empty Service"
+3. Service Name: kafka
+4. Click on the new service
 ```
 
-#### Step 2: Get Kafka Details
+### Step 2: Deploy Kafka Container
+
 ```bash
-# In CloudKarafka Dashboard → Instance Details
-Copy these values:
-- Brokers (CLOUDKARAFKA_BROKERS)
-- Username (CLOUDKARAFKA_USERNAME)
-- Password (CLOUDKARAFKA_PASSWORD)
-- Topic Prefix (e.g., xyz12345-)
+1. In kafka service → Settings → Deploy
+2. Source: "Docker Image"
+3. Image: bitnami/kafka:3.6
+4. Click "Deploy"
 ```
 
-#### Step 3: Create Topic
-```bash
-# Topics are auto-created, but you can pre-create:
-# Dashboard → Topics → Create
-Topic name: xyz12345-order-events
-(Note: Must include your prefix)
-```
-
----
-
-### Option 2 - Aiven (Free Trial - 30 days)
-
-**Great features, trial expires in 30 days**
+### Step 3: Configure Kafka Environment Variables
 
 ```bash
-1. Go to https://aiven.io
-2. Sign up (Free trial)
-3. Create Kafka service
-4. Select "Startup-2" plan (Free trial)
-5. Get connection details
-```
+# In kafka service → Variables tab
+# Click "New Variable" and add these:
 
----
-
-### Option 3 - Deploy Kafka on Railway
-
-**Run your own Kafka container (uses more memory)**
-
-```bash
-1. Railway Dashboard → New → Empty Service
-2. Deploy from Docker image: bitnami/kafka:latest
-3. Set environment variables (see below)
-4. Uses your Railway $5 credit
-```
-
-**Environment Variables for Kafka on Railway:**
-```bash
 KAFKA_CFG_NODE_ID=0
 KAFKA_CFG_PROCESS_ROLES=controller,broker
 KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka.railway.internal:9092
 KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
 KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@localhost:9093
 KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+ALLOW_PLAINTEXT_LISTENER=yes
+KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
 ```
+
+### Step 4: Verify Kafka is Running
+
+```bash
+1. kafka service → Deployments
+2. Wait 2-3 minutes for Kafka to start
+3. Check Logs - Should see "Kafka Server started"
+4. Status should show "Active"
+```
+
+**That's it! Kafka is now running on Railway.**
 
 ---
 
-### ⭐ RECOMMENDED: Use CloudKarafka
+### Alternative Options (If Railway Doesn't Work)
 
-For this guide, we'll use CloudKarafka (most reliable free tier).
+If you need external Kafka hosting:
+
+**Option A: Aiven ($300 free credit)**
+- https://console.aiven.io/signup
+- Free trial for 2-3 months
+- Requires credit card
+
+**Option B: Confluent Cloud ($400 free credit)**  
+- https://www.confluent.io/confluent-cloud/
+- Free trial for 3-4 months
+- Requires credit card
+
+**See `KAFKA_FREE_HOSTING_2024.md` for complete guide on alternatives.**
 
 ---
 
@@ -241,11 +240,9 @@ DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.P
 DB_USER=${{Postgres.PGUSER}}
 DB_PASSWORD=${{Postgres.PGPASSWORD}}
 
-# Kafka (from CloudKarafka - FREE)
-KAFKA_SERVERS=ark-01.srvs.cloudkarafka.com:9094,ark-02.srvs.cloudkarafka.com:9094,ark-03.srvs.cloudkarafka.com:9094
-KAFKA_USERNAME=your-cloudkarafka-username
-KAFKA_PASSWORD=your-cloudkarafka-password
-KAFKA_TOPIC_PREFIX=xyz12345-
+# Kafka (Railway Internal - No external config needed)
+KAFKA_SERVERS=kafka.railway.internal:9092
+# No username/password needed for Railway internal network
 
 # Product Service URL
 PRODUCT_SERVICE_URL=http://product-service.railway.internal:8082
@@ -275,11 +272,9 @@ DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.P
 DB_USER=${{Postgres.PGUSER}}
 DB_PASSWORD=${{Postgres.PGPASSWORD}}
 
-# Kafka (from CloudKarafka - FREE)
-KAFKA_SERVERS=ark-01.srvs.cloudkarafka.com:9094,ark-02.srvs.cloudkarafka.com:9094,ark-03.srvs.cloudkarafka.com:9094
-KAFKA_USERNAME=your-cloudkarafka-username
-KAFKA_PASSWORD=your-cloudkarafka-password
-KAFKA_TOPIC_PREFIX=xyz12345-
+# Kafka (Railway Internal)
+KAFKA_SERVERS=kafka.railway.internal:9092
+# No username/password needed
 ```
 
 **Deploy:**
@@ -395,12 +390,12 @@ Railway automatically deploys on every push to main branch.
 - 💤 Order Service (wakes on request)
 - 💤 Notification Service (wakes on request)
 
-### CloudKarafka (Free):
-- ✅ 5 MB storage
-- ✅ 10 MB/day throughput  
-- ✅ Forever free
+### Kafka (Railway):
+- ✅ Unlimited storage (within Railway limits)
+- ✅ Unlimited throughput
+- ✅ Uses ~$1.50/month from Railway credit
 
-**Total Monthly Cost: $0** (within free tiers)
+**Total Monthly Cost: $0** (within Railway's $5 free tier)
 
 ---
 
@@ -431,11 +426,12 @@ Postgres service → Variables → Copy connection strings
 ### Kafka Connection Failed
 
 ```bash
-# Verify CloudKarafka credentials
-1. CloudKarafka Console → Your Instance → Details
-2. Copy exact values (including topic prefix)
-3. Update Railway environment variables
-4. Ensure SASL_SSL is configured
+# Verify Kafka is running on Railway
+1. Railway Dashboard → kafka service → Deployments
+2. Check status is "Active"
+3. Check logs for "Kafka Server started"
+4. Verify KAFKA_SERVERS=kafka.railway.internal:9092 in services
+5. Ensure all services are in same Railway project
 ```
 
 ### Service Timeout
@@ -452,7 +448,7 @@ Postgres service → Variables → Copy connection strings
 
 ## 🎉 Success Checklist
 
-- [ ] CloudKarafka Kafka instance created
+- [ ] Kafka deployed on Railway
 - [ ] Railway project created
 - [ ] PostgreSQL added
 - [ ] Redis added
